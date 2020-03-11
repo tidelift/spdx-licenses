@@ -1,3 +1,3 @@
 module SpdxLicenses
-  VERSION = '1.2.0'
+  VERSION = '3.8.14'
 end

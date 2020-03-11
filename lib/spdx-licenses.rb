@@ -1,31 +1,49 @@
 require 'json'
-require 'spdx-licenses/license'
-require 'spdx-licenses/version'
+require_relative 'spdx-licenses/license'
+require_relative 'spdx-licenses/exception'
+require_relative 'spdx-licenses/version'
 
 module SpdxLicenses
-  def self.data
-    unless defined?(@@data)
-      spdx = JSON.load(File.read(File.expand_path('../../licenses.json', __FILE__)))
-
-      # Convert the array of hashes to a hash with the license ID as the key and
-      # the rest of each hash as the value.
-      @@data = {}
-      spdx['licenses'].each do |details|
-        id = details.delete('licenseId')
-        @@data[id] = details
+  def self.exceptions
+    unless defined?(@@exceptions)
+      data = JSON.load(File.read(File.expand_path('../../exceptions.json', __FILE__)))
+      @@exceptions = {}
+      data['exceptions'].each do |details|
+        id = details.delete('licenseExceptionId')
+        @@exceptions[id] = details
       end
     end
+    @@exceptions
+  end
 
-    @@data
+  def self.licenses
+    unless defined?(@@licenses)
+      data = JSON.load(File.read(File.expand_path('../../licenses.json', __FILE__)))
+      @@licenses = {}
+      data['licenses'].each do |details|
+        id = details.delete('licenseId')
+        @@licenses[id] = details
+      end
+    end
+    @@licenses
   end
 
   def self.lookup(id)
-    entry = data[id.to_s]
+    entry = licenses[id.to_s]
     SpdxLicenses::License.new(id.to_s, entry['name'], entry['isOsiApproved']) if entry
   end
 
   def self.exist?(id)
-    data.has_key? id.to_s
+    licenses.has_key? id.to_s
+  end
+
+  def self.lookup_exception(id)
+    entry = exceptions[id.to_s]
+    SpdxLicenses::Exception.new(id.to_s, entry['name'], entry['isDeprecatedLicenseId']) if entry
+  end
+
+  def self.exception_exist?(id)
+    exceptions.has_key? id.to_s
   end
 
   def self.version
